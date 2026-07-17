@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Palworld Server Control Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Glowing Blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <!-- App Loading Screen -->
+  <div id="app-loading-screen" class="overlay active" style="background: var(--bg-main); transition: opacity 0.5s ease; z-index: 2000;">
+    <div class="loader-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;">
+      <div class="spinner" style="width: 50px; height: 50px; border-width: 4px;"></div>
+      <h2 style="font-size: 1.1rem; font-weight: 600; color: white; letter-spacing: 0.5px;">Connecting to dashboard...</h2>
+    </div>
+  </div>
+
+  <!-- Login Overlay -->
+  <div id="login-overlay" class="overlay">
+    <div class="login-card glass-panel">
+      <div class="brand">
+        <div class="logo-placeholder">🎮</div>
+        <h1>Palworld Control Panel</h1>
+        <p>Enter administrative password to manage the dedicated server</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <input type="password" id="admin-password" placeholder="Password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Unlock Dashboard</button>
+        <p class="error-msg" id="login-error"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div id="dashboard-container" class="container">
+    
+    <!-- Top Header -->
+    <header class="header glass-panel">
+      <div class="header-info">
+        <div class="server-logo">👾</div>
+        <div>
+          <h2>Palworld Dedicated Server</h2>
+          <p class="subtitle">Self-Hosted Administration Console</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div id="connection-badge" class="badge badge-offline">
+          <span class="pulse-dot"></span>
+          <span class="badge-text">Disconnected</span>
+        </div>
+        <button id="logout-btn" class="btn btn-secondary">Logout</button>
+      </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="grid-layout">
+      
+      <!-- Left Column: Controls & System Info -->
+      <section class="column-left">
+        
+        <!-- Server Control Panel -->
+        <div class="card glass-panel">
+          <h3>Server Control</h3>
+          <p class="section-desc">Manage the execution of PalServer.exe</p>
+          
+          <div class="status-summary">
+            <span class="status-label">Server Status:</span>
+            <span id="server-status-text" class="status-val text-offline">Stopped</span>
+          </div>
+
+          <div class="control-actions">
+            <button id="start-btn" class="btn btn-success">🟢 Start Server</button>
+            <button id="stop-btn" class="btn btn-danger">🔴 Stop Server</button>
+            <button id="restart-btn" class="btn btn-warning">🔄 Restart Server</button>
+            <button id="update-btn" class="btn btn-primary" style="grid-column: span 2; background: linear-gradient(135deg, #3a86f0, #00b4d8); box-shadow: 0 4px 15px rgba(0, 180, 216, 0.25);">📥 Update Server (SteamCMD)</button>
+          </div>
+        </div>
+
+        <!-- Live Metrics -->
+        <div class="card glass-panel">
+          <h3>Live Process Performance</h3>
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <div class="metric-val" id="metric-cpu">0%</div>
+              <div class="metric-label">Server CPU Usage</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-val" id="metric-ram">0 MB</div>
+              <div class="metric-label">Server RAM Usage</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-val" id="metric-uptime">--:--:--</div>
+              <div class="metric-label">Server Uptime</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-val" id="metric-pid">-</div>
+              <div class="metric-label">Process ID (PID)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Machine Performance -->
+        <div class="card glass-panel">
+          <h3>Host Machine Performance</h3>
+          <div class="sys-metrics">
+            <div class="progress-container">
+              <div class="progress-header">
+                <span>CPU Load</span>
+                <span id="sys-cpu-text">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div id="sys-cpu-bar" class="progress-fill" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="progress-container">
+              <div class="progress-header">
+                <span>RAM Usage</span>
+                <span id="sys-ram-text">0 / 0 GB (0%)</span>
+              </div>
+              <div class="progress-bar">
+                <div id="sys-ram-bar" class="progress-fill" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Settings -->
+        <div class="card glass-panel">
+          <h3>Dashboard Settings</h3>
+          <form id="config-form">
+            <div class="form-group-compact">
+              <label for="config-server-path">PalServer.exe Path</label>
+              <input type="text" id="config-server-path" placeholder="Path to PalServer.exe" required>
+            </div>
+            <div class="form-group-compact">
+              <label for="config-settings-path">PalWorldSettings.ini Path</label>
+              <input type="text" id="config-settings-path" placeholder="Path to PalWorldSettings.ini" required>
+            </div>
+            <div class="form-group-compact">
+              <label for="config-new-password">Change Admin Password (Optional)</label>
+              <input type="password" id="config-new-password" placeholder="Leave blank to keep current">
+            </div>
+            <button type="submit" class="btn btn-secondary btn-block" style="margin-top: 15px;">💾 Save Dashboard Config</button>
+          </form>
+        </div>
+
+      </section>
+
+      <!-- Right Column: PalWorldSettings.ini Editor -->
+      <section class="column-right">
+        <div class="card glass-panel main-settings-card">
+          <!-- Main Right Panels Tabs Navigation -->
+          <div class="main-tabs-nav" style="display: flex; gap: 8px; border-bottom: 2px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 15px; flex-wrap: wrap;">
+            <button class="main-tab-btn active" data-main-tab="settings" style="background: transparent; border: none; color: var(--text-secondary); font-family: var(--font-main); padding: 8px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: var(--transition);">⚙️ Game Settings</button>
+            <button class="main-tab-btn" data-main-tab="players" style="background: transparent; border: none; color: var(--text-secondary); font-family: var(--font-main); padding: 8px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: var(--transition);">👥 Players & Broadcast</button>
+            <button class="main-tab-btn" data-main-tab="backups" style="background: transparent; border: none; color: var(--text-secondary); font-family: var(--font-main); padding: 8px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: var(--transition);">💾 Backup Manager</button>
+            <button class="main-tab-btn" data-main-tab="rcon" style="background: transparent; border: none; color: var(--text-secondary); font-family: var(--font-main); padding: 8px 16px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: var(--transition);">💻 RCON Console</button>
+          </div>
+
+          <!-- Tab Content: Game Settings -->
+          <div id="main-tab-content-settings" class="main-tab-content">
+            <div class="card-header-flex">
+              <div>
+                <h3>Palworld Game Settings</h3>
+                <p class="section-desc">Edit variables inside your PalWorldSettings.ini file</p>
+              </div>
+              <button id="save-settings-btn" class="btn btn-primary">💾 Save Settings</button>
+            </div>
+
+            <div id="settings-loader" class="loader-container">
+              <div class="spinner"></div>
+              <p>Reading PalWorldSettings.ini...</p>
+            </div>
+
+            <div id="settings-editor-container" class="settings-editor-form hidden">
+            <!-- Tabs for grouping settings -->
+            <div class="tabs-nav">
+              <button class="tab-btn active" data-tab="general">Gameplay & Server Info</button>
+              <button class="tab-btn" data-tab="rates">Rates & Multipliers</button>
+              <button class="tab-btn" data-tab="pal-player">Player & Pal Stats</button>
+            </div>
+
+            <!-- Tab Content: General / Server Info -->
+            <div class="tab-content active" id="tab-general">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="set-ServerName">Server Name</label>
+                  <input type="text" id="set-ServerName" data-key="ServerName">
+                </div>
+                <div class="form-group">
+                  <label for="set-ServerDescription">Server Description</label>
+                  <input type="text" id="set-ServerDescription" data-key="ServerDescription">
+                </div>
+                <div class="form-group">
+                  <label for="set-ServerPassword">Server Joining Password</label>
+                  <input type="text" id="set-ServerPassword" data-key="ServerPassword" placeholder="No password">
+                </div>
+                <div class="form-group">
+                  <label for="set-AdminPassword">Admin Password (In-game RCON)</label>
+                  <input type="text" id="set-AdminPassword" data-key="AdminPassword">
+                </div>
+                <div class="form-group">
+                  <label for="set-PublicPort">Game Port (UDP)</label>
+                  <input type="number" id="set-PublicPort" data-key="PublicPort">
+                </div>
+                <div class="form-group">
+                  <label for="set-Difficulty">Difficulty</label>
+                  <select id="set-Difficulty" data-key="Difficulty">
+                    <option value="None">None</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="set-DeathPenalty">Death Penalty</label>
+                  <select id="set-DeathPenalty" data-key="DeathPenalty">
+                    <option value="None">None (Keep everything)</option>
+                    <option value="Item">Item (Drop items only)</option>
+                    <option value="ItemAndEquipment">Item & Equipment</option>
+                    <option value="All">All (Drop everything)</option>
+                  </select>
+                </div>
+                <div class="form-group checkbox-group">
+                  <input type="checkbox" id="set-bEnableFastTravel" data-key="bEnableFastTravel">
+                  <label for="set-bEnableFastTravel">Enable Fast Travel</label>
+                </div>
+                <div class="form-group checkbox-group">
+                  <input type="checkbox" id="set-bEnableInvaderEnemy" data-key="bEnableInvaderEnemy">
+                  <label for="set-bEnableInvaderEnemy">Enable Raids / Invaders</label>
+                </div>
+                <div class="form-group checkbox-group">
+                  <input type="checkbox" id="set-bIsPvP" data-key="bIsPvP">
+                  <label for="set-bIsPvP">Enable PVP Mode</label>
+                </div>
+                <div class="form-group checkbox-group" style="grid-column: span 2;">
+                  <input type="checkbox" id="set-RESTAPIEnabled" data-key="RESTAPIEnabled">
+                  <label for="set-RESTAPIEnabled" style="color: #64ffda;">Enable Web REST API (Required for player join logs & list)</label>
+                </div>
+                <div class="form-group">
+                  <label for="set-RESTAPIPort">REST API Port</label>
+                  <input type="number" id="set-RESTAPIPort" data-key="RESTAPIPort">
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Content: Rates -->
+            <div class="tab-content" id="tab-rates">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="set-ExpRate">Experience Rate</label>
+                  <input type="number" step="0.1" id="set-ExpRate" data-key="ExpRate">
+                </div>
+                <div class="form-group">
+                  <label for="set-PalCaptureRate">Pal Capture Rate Multiplier</label>
+                  <input type="number" step="0.1" id="set-PalCaptureRate" data-key="PalCaptureRate">
+                </div>
+                <div class="form-group">
+                  <label for="set-PalSpawnNumRate">Pal Spawn Density Rate</label>
+                  <input type="number" step="0.1" id="set-PalSpawnNumRate" data-key="PalSpawnNumRate">
+                </div>
+                <div class="form-group">
+                  <label for="set-CollectionDropRate">Collection items Drop Rate</label>
+                  <input type="number" step="0.1" id="set-CollectionDropRate" data-key="CollectionDropRate">
+                </div>
+                <div class="form-group">
+                  <label for="set-CollectionObjectHpRate">Resource Node HP Rate</label>
+                  <input type="number" step="0.1" id="set-CollectionObjectHpRate" data-key="CollectionObjectHpRate">
+                </div>
+                <div class="form-group">
+                  <label for="set-CollectionObjectRespawnSpeedRate">Resource Node Respawn Speed</label>
+                  <input type="number" step="0.1" id="set-CollectionObjectRespawnSpeedRate" data-key="CollectionObjectRespawnSpeedRate">
+                </div>
+                <div class="form-group">
+                  <label for="set-EnemyDropItemRate">Enemy Drop item Rate</label>
+                  <input type="number" step="0.1" id="set-EnemyDropItemRate" data-key="EnemyDropItemRate">
+                </div>
+                <div class="form-group">
+                  <label for="set-PalEggAbortionTime">Egg Incubation Time (Hours)</label>
+                  <input type="number" step="0.5" id="set-PalEggAbortionTime" data-key="PalEggAbortionTime">
+                </div>
+                <div class="form-group">
+                  <label for="set-BaseCampWorkerMaxNum">Max Workers per Base Camp</label>
+                  <input type="number" id="set-BaseCampWorkerMaxNum" data-key="BaseCampWorkerMaxNum">
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Content: Player & Pal Stats -->
+            <div class="tab-content" id="tab-pal-player">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="set-PlayerDamageRateAttack">Player Damage Attack Rate</label>
+                  <input type="number" step="0.1" id="set-PlayerDamageRateAttack" data-key="PlayerDamageRateAttack">
+                </div>
+                <div class="form-group">
+                  <label for="set-PlayerDamageRateDefense">Player Damage Defense Rate</label>
+                  <input type="number" step="0.1" id="set-PlayerDamageRateDefense" data-key="PlayerDamageRateDefense">
+                </div>
+                <div class="form-group">
+                  <label for="set-PalDamageRateAttack">Pal Damage Attack Rate</label>
+                  <input type="number" step="0.1" id="set-PalDamageRateAttack" data-key="PalDamageRateAttack">
+                </div>
+                <div class="form-group">
+                  <label for="set-PalDamageRateDefense">Pal Damage Defense Rate</label>
+                  <input type="number" step="0.1" id="set-PalDamageRateDefense" data-key="PalDamageRateDefense">
+                </div>
+                <div class="form-group">
+                  <label for="set-PlayerStaminaDecreasedRate">Player Stamina Decrease Rate</label>
+                  <input type="number" step="0.1" id="set-PlayerStaminaDecreasedRate" data-key="PlayerStaminaDecreasedRate">
+                </div>
+                <div class="form-group">
+                  <label for="set-PlayerStomachDecreasedRate">Player Hunger Decrease Rate</label>
+                  <input type="number" step="0.1" id="set-PlayerStomachDecreasedRate" data-key="PlayerStomachDecreasedRate">
+                </div>
+                <div class="form-group">
+                  <label for="set-PalStaminaDecreasedRate">Pal Stamina Decrease Rate</label>
+                  <input type="number" step="0.1" id="set-PalStaminaDecreasedRate" data-key="PalStaminaDecreasedRate">
+                </div>
+                <div class="form-group">
+                  <label for="set-PalStomachDecreasedRate">Pal Hunger Decrease Rate</label>
+                  <input type="number" step="0.1" id="set-PalStomachDecreasedRate" data-key="PalStomachDecreasedRate">
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- Close settings-editor-container -->
+        </div> <!-- Close main-tab-content-settings -->
+
+        <!-- Tab Content: Players & Broadcast -->
+        <div id="main-tab-content-players" class="main-tab-content hidden" style="animation: fadeIn 0.3s ease;">
+          <div class="card-header-flex" style="margin-bottom: 20px;">
+            <div>
+              <h3>Players & Broadcast</h3>
+              <p class="section-desc">Manage online players and send in-game announcements</p>
+            </div>
+          </div>
+          
+          <!-- Broadcast section -->
+          <div class="form-group" style="margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+            <label for="broadcast-msg-input" style="font-weight: 600; color: #64ffda; display: block; margin-bottom: 6px;">📢 Broadcast Message in-game</label>
+            <div style="display: flex; gap: 10px;">
+              <input type="text" id="broadcast-msg-input" placeholder="Type a message to show on players' screens..." style="flex-grow: 1;">
+              <button id="send-broadcast-btn" class="btn btn-primary" style="padding: 10px 20px;">Send</button>
+            </div>
+          </div>
+
+          <!-- Players table -->
+          <div style="display: flex; flex-direction: column;">
+            <h4 style="margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);">Active Players Online</h4>
+            <div style="overflow-x: auto; background: rgba(5,5,8,0.4); border-radius: 8px; border: 1px solid var(--border-color); max-height: 280px; overflow-y: auto;">
+              <table class="data-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-color); background: rgba(255,255,255,0.02);">
+                    <th style="padding: 10px 15px; color: var(--text-secondary);">Name</th>
+                    <th style="padding: 10px 15px; color: var(--text-secondary);">Steam ID</th>
+                    <th style="padding: 10px 15px; color: var(--text-secondary);">Player ID</th>
+                    <th style="padding: 10px 15px; color: var(--text-secondary);">Ping</th>
+                    <th style="padding: 10px 15px; color: var(--text-secondary); text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="active-players-tbody">
+                  <tr>
+                    <td colspan="5" style="padding: 20px; text-align: center; color: var(--text-secondary);">No players online. REST API must be enabled.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Content: Backup Manager -->
+        <div id="main-tab-content-backups" class="main-tab-content hidden" style="animation: fadeIn 0.3s ease;">
+          <div class="card-header-flex" style="margin-bottom: 20px;">
+            <div>
+              <h3>Backup Manager</h3>
+              <p class="section-desc">Create and restore server backups (Auto backups every 30 mins, keeping last 20)</p>
+            </div>
+            <button id="create-backup-btn" class="btn btn-primary">➕ Create Manual Backup</button>
+          </div>
+          
+          <div style="overflow-x: auto; background: rgba(5,5,8,0.4); border-radius: 8px; border: 1px solid var(--border-color); max-height: 380px; overflow-y: auto;">
+            <table class="data-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); background: rgba(255,255,255,0.02);">
+                  <th style="padding: 10px 15px; color: var(--text-secondary);">Backup Name</th>
+                  <th style="padding: 10px 15px; color: var(--text-secondary);">Created Time</th>
+                  <th style="padding: 10px 15px; color: var(--text-secondary);">Size (MB)</th>
+                  <th style="padding: 10px 15px; color: var(--text-secondary); text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="backups-tbody">
+                <tr>
+                  <td colspan="4" style="padding: 20px; text-align: center; color: var(--text-secondary);">Loading backups list...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab Content: RCON Console -->
+        <div id="main-tab-content-rcon" class="main-tab-content hidden" style="animation: fadeIn 0.3s ease; display: flex; flex-direction: column;">
+          <div class="card-header-flex" style="margin-bottom: 20px;">
+            <div>
+              <h3>RCON Command Console</h3>
+              <p class="section-desc">Send administrative commands to the server via REST RCON bridge</p>
+            </div>
+          </div>
+
+          <!-- Command Output Terminal -->
+          <div id="rcon-terminal-output" style="background: rgba(5,5,8,0.9); border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace; font-size: 0.85rem; padding: 15px; color: #64ffda; height: 260px; overflow-y: auto; line-height: 1.5; margin-bottom: 15px; white-space: pre-wrap;">[System] RCON Console active. REST API must be enabled in settings.
+
+Available Commands:
+- Save : Force write world saves to disk.
+- Broadcast &lt;message&gt; : Send announcement to all players.
+- Kick &lt;SteamID/PlayerID&gt; : Kick player.
+- Ban &lt;SteamID/PlayerID&gt; : Ban player.
+- Shutdown &lt;seconds&gt; &lt;message&gt; : Safely shut down server.
+</div>
+
+          <!-- Command Input Box -->
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="rcon-cmd-input" placeholder="Type command (e.g. Save, Broadcast Hello!) and press Enter..." style="flex-grow: 1; font-family: monospace;">
+            <button id="execute-rcon-btn" class="btn btn-secondary" style="padding: 10px 20px;">Execute</button>
+          </div>
+        </div>
+      </div>
+      </section>
+
+    </main>
+
+    <!-- Operation Logs Footer Console -->
+    <footer class="footer-console glass-panel">
+      <div class="console-header">
+        <div class="console-tabs" style="display: flex; gap: 8px;">
+          <button class="console-tab-btn active" data-console="dashboard" style="background: transparent; border: none; color: var(--text-secondary); font-family: var(--font-main); padding: 6px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border-radius: 6px; transition: var(--transition);">Dashboard Logs</button>
+          <button class="console-tab-btn" data-console="game" style="background: transparent; border: none; color: var(--text-secondary); font-family: var(--font-main); padding: 6px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border-radius: 6px; transition: var(--transition);">Palworld Server Logs</button>
+        </div>
+        <button id="clear-console-btn" class="btn btn-secondary-compact">Clear Logs</button>
+      </div>
+      <div id="console-logs" class="console-body">
+        <p class="log-info">[System] Dashboard initialized. Waiting for connection...</p>
+      </div>
+      <div id="game-console-logs" class="console-body hidden" style="font-family: monospace; white-space: pre-wrap; font-size: 0.8rem; line-height: 1.5; color: #81a1c1; height: 120px; overflow-y: auto;">
+[System] Waiting for Palworld Server output...
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

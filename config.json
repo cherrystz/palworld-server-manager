@@ -1,0 +1,6 @@
+{
+  "port": 31742,
+  "adminPassword": "admin",
+  "serverPath": "E:\\PalAI\\server\\PalServer.exe",
+  "settingsPath": "E:\\PalAI\\server\\Pal\\Saved\\Config\\WindowsServer\\PalWorldSettings.ini"
+}

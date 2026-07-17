@@ -1,0 +1,20 @@
+# Palworld Server files (heavy compiled game binaries, pak assets, and engine files)
+server/
+
+# SteamCMD utility
+steamcmd/
+
+# Node dependencies
+node_modules/
+
+# Local database/backups
+backups/
+
+# Runtime log files
+*.log
+
+# IDE & system configs
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,14 @@
+{
+  "name": "palworld-web-dashboard",
+  "version": "1.0.0",
+  "description": "Lightweight self-hosted dashboard to manage Palworld Dedicated Server",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.2"
+  }
+}
