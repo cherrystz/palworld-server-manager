@@ -777,14 +777,18 @@ if (!fs.existsSync(backupDir)) {
 function getFolderSize(dirPath) {
   let size = 0;
   if (!fs.existsSync(dirPath)) return 0;
+  const stat = fs.statSync(dirPath);
+  if (!stat.isDirectory()) {
+    return stat.size;
+  }
   const files = fs.readdirSync(dirPath);
   for (let i = 0; i < files.length; i++) {
     const filePath = path.join(dirPath, files[i]);
-    const stats = fs.statSync(filePath);
-    if (stats.isDirectory()) {
+    const fileStat = fs.statSync(filePath);
+    if (fileStat.isDirectory()) {
       size += getFolderSize(filePath);
     } else {
-      size += stats.size;
+      size += fileStat.size;
     }
   }
   return size;
@@ -889,7 +893,14 @@ app.post('/api/backups/restore', authenticate, async (req, res) => {
     }
     
     fs.mkdirSync(saveGamesPath, { recursive: true });
-    fs.cpSync(backupSource, saveGamesPath, { recursive: true });
+    const isZip = backupSource.toLowerCase().endsWith('.zip');
+    if (isZip) {
+      appendServerLog(`[System] Extracting zip backup "${name}" to SaveGames...\n`);
+      await execAsync(`powershell -Command "Expand-Archive -Path '${backupSource}' -DestinationPath '${saveGamesPath}' -Force"`);
+    } else {
+      appendServerLog(`[System] Copying folder backup "${name}" to SaveGames...\n`);
+      fs.cpSync(backupSource, saveGamesPath, { recursive: true });
+    }
     
     appendServerLog(`[System] Backup files restored. Starting server again...\n`);
     
