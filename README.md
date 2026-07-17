@@ -1,5 +1,8 @@
 # 👾 Palworld Web Dashboard
 
+> [!NOTE]
+> This project is a customized extension and fork of the original [palworld-ds-gui by diogomartino](https://github.com/diogomartino/palworld-ds-gui). We have redesigned the user interface with premium slate-purple glassmorphism, expanded the backend endpoints, and added advanced administration panels (live player kicks/bans, native ZIP backups, and an RCON console).
+
 A sleek, lightweight, self-hosted web control panel to monitor and administer your Palworld Dedicated Server. Built using a fast Node.js Express backend and a responsive, premium slate-purple glassmorphic frontend (Vanilla HTML5/CSS3/JS). Zero database dependencies, fully portable.
 
 ---
@@ -88,14 +91,4 @@ To allow other administrators to access this dashboard remotely:
 2. **Router Port Forwarding:** Forward TCP port `31742` to your host computer's local IP address.
 3. Open your game port (Default: `8211` UDP) so players can join.
 
----
 
-## 🤝 Credits & Acknowledgements
-
-- This project is a customized extension and fork of the original [palworld-ds-gui by diogomartino](https://github.com/diogomartino/palworld-ds-gui).
-- Major enhancements added in this version:
-  - Responsive slate-purple glassmorphic dashboard UI with Toast Notifications and Page loading indicators.
-  - Advanced 4-Tab Control Console (Game Settings, Live Players, Backup Manager, RCON Console).
-  - Robust Backup Manager supporting manual/periodic auto backups and native Windows ZIP extraction.
-  - Optimized Line-buffered server logging, resolving delay issues on shipping cmd builds.
-  - Secured dashboard security configurations, hiding host path configs from the frontend client.
