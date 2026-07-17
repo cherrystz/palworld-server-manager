@@ -136,21 +136,14 @@
 
         <!-- Dashboard Settings -->
         <div class="card glass-panel">
-          <h3>Dashboard Settings</h3>
+          <h3>Dashboard Security</h3>
+          <p class="section-desc" style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 12px;">Paths are configured inside <code>config.json</code> on the host machine.</p>
           <form id="config-form">
             <div class="form-group-compact">
-              <label for="config-server-path">PalServer.exe Path</label>
-              <input type="text" id="config-server-path" placeholder="Path to PalServer.exe" required>
+              <label for="config-new-password">Change Admin Password</label>
+              <input type="password" id="config-new-password" placeholder="Enter new password" required>
             </div>
-            <div class="form-group-compact">
-              <label for="config-settings-path">PalWorldSettings.ini Path</label>
-              <input type="text" id="config-settings-path" placeholder="Path to PalWorldSettings.ini" required>
-            </div>
-            <div class="form-group-compact">
-              <label for="config-new-password">Change Admin Password (Optional)</label>
-              <input type="password" id="config-new-password" placeholder="Leave blank to keep current">
-            </div>
-            <button type="submit" class="btn btn-secondary btn-block" style="margin-top: 15px;">💾 Save Dashboard Config</button>
+            <button type="submit" class="btn btn-secondary btn-block" style="margin-top: 15px;">🔒 Update Password</button>
           </form>
         </div>
 

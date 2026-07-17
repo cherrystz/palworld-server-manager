@@ -58,8 +58,6 @@ const sysRamText = document.getElementById('sys-ram-text');
 const sysRamBar = document.getElementById('sys-ram-bar');
 
 const configForm = document.getElementById('config-form');
-const configServerPath = document.getElementById('config-server-path');
-const configSettingsPath = document.getElementById('config-settings-path');
 const configNewPassword = document.getElementById('config-new-password');
 
 const settingsLoader = document.getElementById('settings-loader');
@@ -239,49 +237,31 @@ saveSettingsBtn.addEventListener('click', async () => {
 });
 
 // Load dashboard config
-async function loadConfig() {
-  try {
-    const res = await fetch('/api/config');
-    if (res.status === 401) return handleUnauthorized();
-    const data = await res.json();
-    if (data) {
-      configServerPath.value = data.serverPath || '';
-      configSettingsPath.value = data.settingsPath || '';
-    }
-  } catch (err) {
-    addLog('Failed to load dashboard configuration', 'danger');
-  }
-}
-
-// Save dashboard config
+// Save dashboard password config
 configForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const serverPath = configServerPath.value;
-  const settingsPath = configSettingsPath.value;
   const newPassword = configNewPassword.value;
 
   try {
-    addLog('Updating dashboard configuration...', 'info');
+    addLog('Updating dashboard password...', 'info');
     const res = await fetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ serverPath, settingsPath, newPassword })
+      body: JSON.stringify({ newPassword })
     });
 
     if (res.status === 401) return handleUnauthorized();
     const data = await res.json();
     if (res.ok) {
-      addLog('Dashboard configuration updated successfully!', 'success');
+      addLog('Dashboard password updated successfully!', 'success');
       configNewPassword.value = '';
-      showToast('Dashboard config saved!', 'success');
-      // Reload settings in case settings path changed
-      loadSettings();
+      showToast('Dashboard password updated successfully!', 'success');
     } else {
-      addLog(`Config update failed: ${data.error}`, 'danger');
-      showToast(`Error saving config: ${data.error}`, 'error');
+      addLog(`Password update failed: ${data.error}`, 'danger');
+      showToast(`Error updating password: ${data.error}`, 'error');
     }
   } catch (err) {
-    addLog(`Network error saving configuration: ${err.message}`, 'danger');
+    addLog(`Network error updating password: ${err.message}`, 'danger');
   }
 });
 
@@ -554,7 +534,6 @@ async function checkInitialLogin() {
       dashboardContainer.classList.add('active');
       startPolling();
       loadSettings();
-      loadConfig();
       
       // Check if an update is currently running
       fetch('/api/update-status')
